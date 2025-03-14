@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/karan-0701/url-shortner/internal/utils"
 )
 
@@ -80,7 +82,15 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 	ip := utils.GetIPAddress(r)
 
 	// Call ipstack API to get geolocation
-	apiKey := "0b434f9d97ed20e7ccc642e6b9b64459" // Replace with your ipstack API key
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	apiKey := os.Getenv("IPSTACK_API_KEY")
+	if apiKey == "" {
+		log.Fatal("IPSTACK_API_KEY environment variable is not set")
+	}
+
 	country, city, err := utils.GetGeolocation(ip, apiKey)
 	if err != nil {
 		log.Printf("Failed to fetch geolocation: %v\n", err)
