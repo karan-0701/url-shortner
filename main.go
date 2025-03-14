@@ -17,7 +17,6 @@ func main() {
 	}
 	defer db.Close()
 
-	// Initialize handlers with the database
 	handler := handlers.NewHandler(db)
 
 	// Set up routes

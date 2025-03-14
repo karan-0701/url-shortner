@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -70,5 +71,24 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	referrer := r.Referer()
+	if referrer == "" {
+		referrer = "direct"
+	}
+
+	// Fetch the user's IP address
+	ip := utils.GetIPAddress(r)
+
+	// Call ipstack API to get geolocation
+	apiKey := "0b434f9d97ed20e7ccc642e6b9b64459" // Replace with your ipstack API key
+	country, city, err := utils.GetGeolocation(ip, apiKey)
+	if err != nil {
+		log.Printf("Failed to fetch geolocation: %v\n", err)
+		country, city = "unknown", "unknown" // Default values if geolocation fails
+	}
+	_, err = h.DB.Exec("INSERT into url_analytics (short_code, referrer, country, city) VALUES (?, ?, ?, ?)", shortCode, referrer, country, city)
+	if err != nil {
+		log.Println("Failed to log click:", err)
+	}
 	http.Redirect(w, r, longUrl, http.StatusMovedPermanently)
 }

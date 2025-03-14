@@ -2,7 +2,10 @@ package utils
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 )
 
@@ -60,4 +63,52 @@ func GenRandNum(db *sql.DB, table string, column string) (string, error) {
 		return GenRandNum(db, table, column)
 	}
 	return num, nil
+}
+
+// GetIPAddress extracts the user's IP address from the HTTP request
+func GetIPAddress(r *http.Request) string {
+	ip := r.Header.Get("X-Forwarded-For")
+	if ip != "" {
+		ips := strings.Split(ip, ",")
+		ip = strings.TrimSpace(ips[0])
+	}
+
+	if ip == "" {
+		ip = r.RemoteAddr
+
+		if strings.Contains(ip, ":") {
+			ip = strings.Split(ip, ":")[0]
+		}
+	}
+	return ip
+}
+
+// GetGeolocation fetches the country and city for a given IP address using the ipstack API
+func GetGeolocation(ip string, apiKey string) (string, string, error) {
+	url := fmt.Sprintf("http://api.ipstack.com/%s?access_key=%s", ip, apiKey)
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to call ipstack API: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		CountryName string `json:"country_name"`
+		City        string `json:"city"`
+		Success     bool   `json:"success"`
+		Error       struct {
+			Info string `json:"info"`
+		} `json:"error"`
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to decode ipstack response: %w", err)
+	}
+
+	if !result.Success {
+		return "", "", fmt.Errorf("ipstack API error: %s", result.Error.Info)
+	}
+
+	return result.CountryName, result.City, nil
 }
