@@ -49,7 +49,7 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	baseURL := fmt.Sprintf("https://%s", r.Host)
+	baseURL := fmt.Sprintf("https://ka.ly")
 
 	response := map[string]string{
 		"short_url": fmt.Sprintf("%s/%s", baseURL, shortCode),
