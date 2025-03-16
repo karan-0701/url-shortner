@@ -26,6 +26,10 @@ func main() {
 
 	// Set up routes
 	r := mux.NewRouter()
+
+	fs := http.FileServer(http.Dir("frontend"))
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "frontend/index.html") }).Methods("GET")
 	r.HandleFunc("/shorten", handler.Shorten).Methods("POST")
 	r.HandleFunc("/{shortCode}", handler.Redirect).Methods("GET")
 
