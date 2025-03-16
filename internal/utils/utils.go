@@ -67,19 +67,35 @@ func GenRandNum(db *sql.DB, table string, column string) (string, error) {
 
 // GetIPAddress extracts the user's IP address from the HTTP request
 func GetIPAddress(r *http.Request) string {
+	// Try X-Forwarded-For header first (common for clients behind proxy)
 	ip := r.Header.Get("X-Forwarded-For")
 	if ip != "" {
 		ips := strings.Split(ip, ",")
-		ip = strings.TrimSpace(ips[0])
+		ip = strings.TrimSpace(ips[0]) // Get the client's original IP
+		return ip
 	}
 
-	if ip == "" {
-		ip = r.RemoteAddr
+	// Try X-Real-IP header (used by some proxies)
+	ip = r.Header.Get("X-Real-IP")
+	if ip != "" {
+		return ip
+	}
 
-		if strings.Contains(ip, ":") {
-			ip = strings.Split(ip, ":")[0]
+	// Fall back to RemoteAddr
+	ip = r.RemoteAddr
+
+	// Handle IPv6 addresses which have format [IPv6]:port
+	if strings.HasPrefix(ip, "[") {
+		// Extract IPv6 address without port
+		end := strings.LastIndex(ip, "]")
+		if end > 0 {
+			return ip[1:end]
 		}
+	} else if strings.Contains(ip, ":") {
+		// Handle IPv4 addresses which have format IPv4:port
+		return strings.Split(ip, ":")[0]
 	}
+
 	return ip
 }
 
