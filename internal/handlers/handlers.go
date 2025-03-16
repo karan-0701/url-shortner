@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -50,9 +49,12 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	baseURL := fmt.Sprintf("https://%s", r.Host)
+
 	response := map[string]string{
-		"short_url": fmt.Sprintf("http://localhost:8080/%s", shortCode),
+		"short_url": fmt.Sprintf("%s/%s", baseURL, shortCode),
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
@@ -80,27 +82,14 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 		referrer = "direct"
 	}
 
-	// Fetch the user's IP address
-	ip := utils.GetIPAddress(r)
-
 	// Call ipstack API to get geolocation
 	err = godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	apiKey := os.Getenv("IPSTACK_API_KEY")
-	if apiKey == "" {
-		log.Fatal("IPSTACK_API_KEY environment variable is not set")
-	}
-
-	country, city, err := utils.GetGeolocation(ip, apiKey)
-	if err != nil {
-		log.Printf("Failed to fetch geolocation: %v\n", err)
-		country, city = "unknown", "unknown" // Default values if geolocation fails
-	}
 
 	// Update the query to use PostgreSQL placeholders
-	_, err = h.DB.Exec("INSERT INTO url_analytics (short_code, referrer, country, city) VALUES ($1, $2, $3, $4)", shortCode, referrer, country, city)
+	_, err = h.DB.Exec("INSERT INTO url_analytics (short_code, referrer) VALUES ($1, $2)", shortCode, referrer)
 	if err != nil {
 		log.Println("Failed to log click:", err)
 	}

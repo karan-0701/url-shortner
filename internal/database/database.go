@@ -41,8 +41,6 @@ func ConnectDB() (*sql.DB, error) {
 			id SERIAL PRIMARY KEY,
 			short_code TEXT NOT NULL,
 			referrer TEXT,
-			country TEXT,
-			city TEXT,
 			timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (short_code) REFERENCES urls(short_code)
 		);
