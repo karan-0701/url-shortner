@@ -4,13 +4,19 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
 func ConnectDB() (*sql.DB, error) {
-	// Connect to SQLite database (creates the file if it doesn't exist)
-	db, err := sql.Open("sqlite3", "./urlshortener.db")
+	// PostgreSQL connection string
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		// Fallback to a local connection string for development
+		connStr = "user=username dbname=mydb sslmode=disable password=password"
+	}
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
@@ -18,7 +24,7 @@ func ConnectDB() (*sql.DB, error) {
 	// Create the urls table if it doesn't exist
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS urls (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id SERIAL PRIMARY KEY,
 			short_code TEXT NOT NULL UNIQUE,
 			original_url TEXT NOT NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -29,7 +35,7 @@ func ConnectDB() (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to create table: %w", err)
 	}
 
-	// Crete urls analytics if it does not exist
+	// Create url_analytics table if it doesn't exist
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS url_analytics (
 			id SERIAL PRIMARY KEY,

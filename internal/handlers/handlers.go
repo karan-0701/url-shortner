@@ -43,7 +43,8 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.DB.Exec("INSERT INTO urls (short_code, original_url) VALUES (?, ?)", shortCode, longUrl)
+	// Update the query to use PostgreSQL placeholders
+	_, err = h.DB.Exec("INSERT INTO urls (short_code, original_url) VALUES ($1, $2)", shortCode, longUrl)
 	if err != nil {
 		http.Error(w, "Failed to save URL", http.StatusInternalServerError)
 		return
@@ -62,7 +63,8 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 	shortCode := vars["shortCode"]
 
 	var longUrl string
-	query := h.DB.QueryRow("SELECT original_url FROM urls WHERE short_code = ?", shortCode)
+	// Update the query to use PostgreSQL placeholders
+	query := h.DB.QueryRow("SELECT original_url FROM urls WHERE short_code = $1", shortCode)
 	err := query.Scan(&longUrl)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -96,9 +98,12 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Failed to fetch geolocation: %v\n", err)
 		country, city = "unknown", "unknown" // Default values if geolocation fails
 	}
-	_, err = h.DB.Exec("INSERT into url_analytics (short_code, referrer, country, city) VALUES (?, ?, ?, ?)", shortCode, referrer, country, city)
+
+	// Update the query to use PostgreSQL placeholders
+	_, err = h.DB.Exec("INSERT INTO url_analytics (short_code, referrer, country, city) VALUES ($1, $2, $3, $4)", shortCode, referrer, country, city)
 	if err != nil {
 		log.Println("Failed to log click:", err)
 	}
+
 	http.Redirect(w, r, longUrl, http.StatusMovedPermanently)
 }

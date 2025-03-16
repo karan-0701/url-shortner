@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/karan-0701/url-shortner/internal/database"
@@ -10,6 +11,10 @@ import (
 )
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 	// Initialize the database
 	db, err := database.ConnectDB()
 	if err != nil {
@@ -26,5 +31,5 @@ func main() {
 
 	// Start the server
 	log.Println("Server started on :8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Fatal(http.ListenAndServe(":"+port, r))
 }

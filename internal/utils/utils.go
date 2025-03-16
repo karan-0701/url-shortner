@@ -39,7 +39,7 @@ func GenerateBase62ID() string {
 
 // CheckEntry checks if an entry exists in the database
 func CheckEntry(db *sql.DB, table string, column string, value string) (bool, error) {
-	query := fmt.Sprintf("SELECT 1 FROM %s WHERE %s = ? LIMIT 1", table, column)
+	query := fmt.Sprintf("SELECT 1 FROM %s WHERE %s = $1 LIMIT 1", table, column)
 	var exists int
 	row := db.QueryRow(query, value)
 	err := row.Scan(&exists)
