@@ -49,9 +49,12 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	baseURL := fmt.Sprintf("https://%s", r.Host)
+
 	response := map[string]string{
-		"short_url": fmt.Sprintf("http://localhost:8080/%s", shortCode),
+		"short_url": fmt.Sprintf("%s/%s", baseURL, shortCode),
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
