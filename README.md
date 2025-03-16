@@ -1,6 +1,7 @@
 # URL Shortener
 
 A simple URL shortener service built with Go and SQLite.
+[![Live Demo](https://img.shields.io/badge/Demo-Live-green?style=for-the-badge)](https://your-deployed-link.com)
 
 ## Features
 - Shorten long URLs into compact, shareable links.
