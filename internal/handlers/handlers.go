@@ -49,12 +49,9 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	baseURL := fmt.Sprintf("https://ka.ly")
-
 	response := map[string]string{
-		"short_url": fmt.Sprintf("%s/%s", baseURL, shortCode),
+		"short_url": fmt.Sprintf("http://localhost:8080/%s", shortCode),
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
@@ -87,7 +84,6 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
 	// Update the query to use PostgreSQL placeholders
 	_, err = h.DB.Exec("INSERT INTO url_analytics (short_code, referrer) VALUES ($1, $2)", shortCode, referrer)
 	if err != nil {
